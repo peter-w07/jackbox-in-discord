@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jackbox Steam</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand" aria-label="Jackbox Steam">
+          <span class="brand-mark">JB</span>
+          <span>Jackbox Steam</span>
+          <span id="discordStatus" class="status-pill">Web</span>
+        </div>
+        <div class="actions">
+          <button id="reloadSteam" type="button" title="Reload" aria-label="Reload">
+            Reload
+          </button>
+          <a id="openSteam" class="button-link" href="/steam/" target="_blank" rel="noreferrer">
+            Open
+          </a>
+        </div>
+      </header>
+      <main class="desktop-shell">
+        <iframe
+          id="steamFrame"
+          title="Steam desktop"
+          allow="autoplay; clipboard-read; clipboard-write; fullscreen; gamepad; microphone"
+          allowfullscreen
+        ></iframe>
+      </main>
+    </div>
+    <script src="/config.js"></script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

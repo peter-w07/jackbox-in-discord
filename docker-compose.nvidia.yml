@@ -1,0 +1,16 @@
+services:
+  steam:
+    environment:
+      PIXELFLUX_WAYLAND: "true"
+      AUTO_GPU: "true"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - compute
+                - video
+                - graphics
+                - utility

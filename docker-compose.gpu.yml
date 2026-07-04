@@ -1,0 +1,7 @@
+services:
+  steam:
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      PIXELFLUX_WAYLAND: "true"
+      AUTO_GPU: "true"

@@ -1,0 +1,61 @@
+services:
+  bot:
+    build: .
+    image: "${BOT_IMAGE:-jackbox-in-discord-bot:latest}"
+    container_name: "${BOT_CONTAINER_NAME:-jackbox-discord-bot}"
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "${BOT_PORT:-3000}"
+      DISCORD_BOT_TOKEN: "${DISCORD_BOT_TOKEN:-}"
+      DISCORD_APPLICATION_ID: "${DISCORD_APPLICATION_ID:-}"
+      DISCORD_GUILD_ID: "${DISCORD_GUILD_ID:-}"
+      PUBLIC_ACTIVITY_URL: "${PUBLIC_ACTIVITY_URL:-}"
+      INVITE_MAX_AGE_SECONDS: "${INVITE_MAX_AGE_SECONDS:-86400}"
+      STEAM_INTERNAL_URL: "${STEAM_INTERNAL_URL:-http://steam:3000}"
+      STEAM_PROXY_PREFIX: "${STEAM_PROXY_PREFIX:-/steam/}"
+    ports:
+      - "${PUBLIC_HTTP_PORT:-3000}:${BOT_PORT:-3000}"
+    depends_on:
+      - steam
+
+  steam:
+    image: "${STEAM_IMAGE:-lscr.io/linuxserver/steam:latest}"
+    container_name: "${STEAM_CONTAINER_NAME:-jackbox-steam}"
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    shm_size: "${STEAM_SHM_SIZE:-2gb}"
+    environment:
+      PUID: "${PUID:-1000}"
+      PGID: "${PGID:-1000}"
+      TZ: "${TZ:-America/New_York}"
+      CUSTOM_PORT: "${STEAM_INTERNAL_PORT:-3000}"
+      CUSTOM_HTTPS_PORT: "${STEAM_INTERNAL_HTTPS_PORT:-3001}"
+      TITLE: "${STEAM_TITLE:-Jackbox Steam}"
+      SELKIES_UI_TITLE: "${STEAM_TITLE:-Jackbox Steam}"
+      SUBFOLDER: "${STEAM_PROXY_PREFIX:-/steam/}"
+      START_DOCKER: "${START_DOCKER:-false}"
+      PIXELFLUX_WAYLAND: "${PIXELFLUX_WAYLAND:-false}"
+      AUTO_GPU: "${AUTO_GPU:-false}"
+      SELKIES_MANUAL_WIDTH: "${STREAM_WIDTH:-1920}"
+      SELKIES_MANUAL_HEIGHT: "${STREAM_HEIGHT:-1080}"
+      SELKIES_FRAMERATE: "${STREAM_FRAMERATE:-60}"
+      SELKIES_AUDIO_ENABLED: "${SELKIES_AUDIO_ENABLED:-true}"
+      SELKIES_GAMEPAD_ENABLED: "${SELKIES_GAMEPAD_ENABLED:-true}"
+      SELKIES_CLIPBOARD_ENABLED: "${SELKIES_CLIPBOARD_ENABLED:-true}"
+      STEAM_APP_IDS: "${STEAM_APP_IDS:-331670 397460 434170 610180 774461 1005300 1211630 1552350 1755580 1850960 2216830 3364070}"
+      CUSTOM_USER: "${STEAM_WEB_USER:-}"
+      PASSWORD: "${STEAM_WEB_PASSWORD:-}"
+    volumes:
+      - steam-config:/config
+      - steam-games:/mnt/games
+      - ./steam/custom-cont-init.d:/custom-cont-init.d
+    expose:
+      - "${STEAM_INTERNAL_PORT:-3000}"
+      - "${STEAM_INTERNAL_HTTPS_PORT:-3001}"
+
+volumes:
+  steam-config:
+  steam-games:
