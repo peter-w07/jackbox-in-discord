@@ -141,6 +141,10 @@ iframe {
     #111111;
 }
 
+.auth-gate[hidden] {
+  display: none;
+}
+
 .auth-panel {
   width: min(440px, 100%);
   border: 1px solid rgba(255, 255, 255, 0.16);
