@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv bash
+set -euo pipefail
+
+if [[ "${AUTO_OPEN_JACKBOX_INSTALLERS:-false}" != "true" ]]; then
+  sleep infinity
+fi
+
+sleep "${AUTO_INSTALL_DELAY_SECONDS:-90}"
+
+if [[ -x /config/jackbox/open-installers.sh ]]; then
+  s6-setuidgid abc /config/jackbox/open-installers.sh || true
+fi
+
+sleep infinity

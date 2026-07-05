@@ -36,7 +36,7 @@ Optional, ask whether I want to change these from defaults:
 - STEAM_INTERNAL_URL=http://steam:3000
 - STEAM_PROXY_PREFIX=/steam/
 - INVITE_MAX_AGE_SECONDS=86400
-- STEAM_IMAGE=lscr.io/linuxserver/steam:latest
+- STEAM_IMAGE=jackbox-steam-webtop:latest
 - STEAM_CONTAINER_NAME=jackbox-steam
 - STEAM_TITLE=Jackbox Steam
 - STEAM_INTERNAL_PORT=3000
@@ -59,6 +59,11 @@ Optional, ask whether I want to change these from defaults:
 - SELKIES_ENCODER=x264enc,jpeg
 - SELKIES_USE_CPU=true
 - START_DOCKER=false
+- STEAM_AUTO_START=true
+- STEAM_START_DELAY_SECONDS=12
+- STEAM_ARGS=-silent
+- AUTO_OPEN_JACKBOX_INSTALLERS=false
+- AUTO_INSTALL_DELAY_SECONDS=90
 - STEAM_WEB_USER blank by default
 - STEAM_WEB_PASSWORD blank by default
 
@@ -69,7 +74,7 @@ Use these Coolify steps:
 4. Do not publicly expose the steam service directly. It should only be reached through the bot service at /steam/.
 5. Add persistent volumes exactly as defined by Compose: steam-config and steam-games.
 6. Add all required environment variables I provided, plus any optional overrides I chose. For optional values I did not change, either omit them or set the defaults above.
-7. Deploy and watch logs until both jackbox-discord-bot and jackbox-steam are healthy.
+7. Deploy and watch logs until both jackbox-discord-bot and jackbox-steam are healthy. The Steam service builds from steam/Dockerfile, based on linuxserver/webtop:ubuntu-xfce with Steam installed.
 8. Visit PUBLIC_ACTIVITY_URL + /healthz and confirm it returns ok.
 9. In Discord Developer Portal, set the Activity URL for this app to PUBLIC_ACTIVITY_URL. Make sure the bot is invited with bot and applications.commands scopes and Create Instant Invite permission.
 10. In Discord, join a voice channel and run /jackbox. Open the invite.

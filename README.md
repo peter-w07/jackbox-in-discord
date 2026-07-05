@@ -5,7 +5,7 @@ A deployable Discord bot plus Discord Activity wrapper for running Jackbox from 
 The stack has two containers:
 
 - `bot`: Node.js Discord bot, slash commands, Activity web app, and same-origin reverse proxy.
-- `steam`: LinuxServer's browser-accessible Steam desktop, mounted to persistent Docker volumes.
+- `steam`: A custom LinuxServer XFCE Webtop image with Steam installed, mounted to persistent Docker volumes.
 
 ## What Works
 
@@ -59,7 +59,7 @@ Everything commonly changed in Coolify is exposed through environment variables.
 | `PUBLIC_HTTP_PORT` | `3000` | Host port for local Compose. Coolify usually manages this. |
 | `STEAM_INTERNAL_URL` | `http://steam:3000` | Internal URL the bot uses to reach Steam. |
 | `STEAM_PROXY_PREFIX` | `/steam/` | Public proxy path. This also becomes Steam's `SUBFOLDER`; keep the leading and trailing slash. |
-| `STEAM_IMAGE` | `lscr.io/linuxserver/steam:latest` | Steam desktop image. |
+| `STEAM_IMAGE` | `jackbox-steam-webtop:latest` | Built Steam/Webtop image name. The compose service builds `steam/Dockerfile`. |
 | `STEAM_CONTAINER_NAME` | `jackbox-steam` | Steam container name. |
 | `STEAM_TITLE` | `Jackbox Steam` | Browser/desktop title. |
 | `STEAM_INTERNAL_PORT` | `3000` | Steam HTTP port inside the container. If changed, update `STEAM_INTERNAL_URL` too. |
@@ -74,6 +74,11 @@ Everything commonly changed in Coolify is exposed through environment variables.
 | `DISABLE_DRI3` / `DISABLE_ZINK` | `true` / `true` | Keep older or no-GPU VPS hosts on software rendering. |
 | `MAX_RES` | `1920x1080` | Clamp the X11 virtual framebuffer for compatibility and lower memory use. |
 | `SELKIES_ENCODER` / `SELKIES_USE_CPU` | `x264enc,jpeg` / `true` | Force software encoders for hosts without AVX2. |
+| `STEAM_AUTO_START` | `true` | Auto-launch Steam when the XFCE desktop starts. |
+| `STEAM_START_DELAY_SECONDS` | `12` | Delay before auto-launching Steam, giving the desktop time to settle. |
+| `STEAM_ARGS` | `-silent` | Arguments passed to the Steam launcher. |
+| `AUTO_OPEN_JACKBOX_INSTALLERS` | `false` | When `true`, queue configured Jackbox install URLs automatically after startup. |
+| `AUTO_INSTALL_DELAY_SECONDS` | `90` | Delay before auto-queueing Jackbox installs. Useful after QR login is complete. |
 | `STEAM_WEB_USER` / `STEAM_WEB_PASSWORD` | blank | Optional basic auth in front of the Steam web desktop. |
 | `STEAM_APP_IDS` | Jackbox pack list | Steam app IDs used by the desktop installer launcher. |
 | `TZ`, `PUID`, `PGID` | `America/New_York`, `1000`, `1000` | LinuxServer container timezone and file ownership. |
@@ -117,7 +122,7 @@ The Compose file creates:
 - `steam-config` mounted at `/config`
 - `steam-games` mounted at `/mnt/games`
 
-LinuxServer's Steam image stores the Steam home directory under `/config`, so normal installs persist. You can also add `/mnt/games` as a Steam library folder from Steam settings if you want a separate game volume.
+The custom Steam Webtop stores the Steam home directory under `/config`, so normal Steam login state and installs persist. You can also add `/mnt/games/SteamLibrary` as a Steam library folder from Steam settings if you want a separate game volume.
 
 ## Security Notes
 
