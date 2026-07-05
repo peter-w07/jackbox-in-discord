@@ -85,7 +85,6 @@ Everything commonly changed in Coolify is exposed through environment variables.
 | `STEAM_ARGS` | `-silent` | Arguments passed to the Steam launcher. |
 | `AUTO_OPEN_JACKBOX_INSTALLERS` | `false` | When `true`, queue configured Jackbox install URLs automatically after startup. |
 | `AUTO_INSTALL_DELAY_SECONDS` | `90` | Delay before auto-queueing Jackbox installs. Useful after QR login is complete. |
-| `STEAM_BASIC_AUTH_USER` / `STEAM_BASIC_AUTH_PASSWORD` | blank | Optional browser basic auth in front of Steam. Leave blank for Discord Activity use. |
 | `STEAM_APP_IDS` | Jackbox pack list | Steam app IDs used by the desktop installer launcher. |
 | `TZ`, `PUID`, `PGID` | `America/New_York`, `1000`, `1000` | LinuxServer container timezone and file ownership. |
 
@@ -134,16 +133,7 @@ The custom Steam Webtop stores the Steam home directory under `/config`, so norm
 
 The Steam web desktop can control a real Linux desktop in the container. Keep the public URL private, use HTTPS, and consider adding reverse-proxy auth if you expose it outside a trusted group.
 
-Use `ACTIVITY_PASSWORD` if you want Discord users to enter a password before the Steam desktop loads. This is rendered as a normal text box inside the Activity instead of a browser auth prompt.
-
-Low-level browser basic auth can still be enabled with:
-
-```env
-STEAM_BASIC_AUTH_USER=jackbox
-STEAM_BASIC_AUTH_PASSWORD=change-this
-```
-
-Basic auth adds a browser prompt before Steam, so leave it blank for Discord Activity use.
+Use `ACTIVITY_PASSWORD` if you want Discord users to enter a password before the Steam desktop loads. This is rendered as a normal text box inside the Activity instead of a browser auth prompt. The Steam container itself is left without HTTP basic auth so Discord can render the Activity cleanly.
 
 ## Coolify
 

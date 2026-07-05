@@ -241,8 +241,7 @@ function readEnv() {
       process.env.DISCORD_APPLICATION_ID || process.env.DISCORD_CLIENT_ID || '',
     discordGuildId: process.env.DISCORD_GUILD_ID || '',
     publicActivityUrl: trimTrailingSlash(process.env.PUBLIC_ACTIVITY_URL || ''),
-    activityPassword:
-      process.env.ACTIVITY_PASSWORD || process.env.LEGACY_STEAM_WEB_PASSWORD || '',
+    activityPassword: process.env.ACTIVITY_PASSWORD || '',
     activitySessionSecret: process.env.ACTIVITY_SESSION_SECRET || '',
     activitySessionTtlSeconds: parseInteger(
       process.env.ACTIVITY_SESSION_TTL_SECONDS,

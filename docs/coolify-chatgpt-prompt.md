@@ -68,8 +68,6 @@ Optional, ask whether I want to change these from defaults:
 - STEAM_ARGS=-silent
 - AUTO_OPEN_JACKBOX_INSTALLERS=false
 - AUTO_INSTALL_DELAY_SECONDS=90
-- STEAM_BASIC_AUTH_USER blank by default
-- STEAM_BASIC_AUTH_PASSWORD blank by default
 
 Use these Coolify steps:
 1. Create a new Coolify resource from the GitHub repo peter-w07/jackbox-in-discord.
@@ -88,7 +86,7 @@ Use these Coolify steps:
 Important constraints:
 - Never ask me to paste my Steam password. Use the QR-code login only.
 - Prefer ACTIVITY_PASSWORD over browser basic auth so Discord users see a normal in-app password box.
-- If basic auth is enabled with STEAM_BASIC_AUTH_USER and STEAM_BASIC_AUTH_PASSWORD, warn me that Discord users will see an extra browser auth prompt.
+- Do not enable browser basic auth on the Steam container; it creates a native browser prompt that may not render correctly in Discord.
 - If the VPS has Intel/AMD GPU access, redeploy with docker-compose.gpu.yml as an override. If it has Nvidia, verify the Nvidia container runtime first, then use docker-compose.nvidia.yml.
 - If STEAM_PROXY_PREFIX changes, keep the leading/trailing slash and make sure the Steam service SUBFOLDER and bot STEAM_PROXY_PREFIX match.
 - If STEAM_INTERNAL_PORT changes, update STEAM_INTERNAL_URL so the bot points at the same port.
