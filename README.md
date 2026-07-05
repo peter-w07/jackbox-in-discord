@@ -15,7 +15,9 @@ The stack has two containers:
 - The Activity loads a full browser Steam desktop at `/steam/`.
 - Steam can be signed into with the normal QR-code flow.
 - Installed games and Steam state persist in Docker volumes.
-- A desktop launcher inside Steam queues Jackbox install prompts for the configured Steam app IDs.
+- Steam install tooling is baked into the custom image.
+- After startup, the Steam container automatically retries Jackbox install URLs for the configured Steam app IDs. Once you sign into Steam with QR, Steam can accept the queued installs for every game your account owns.
+- A desktop launcher is also available as `Install All Jackbox Games`.
 - Coolify can deploy it directly from this repository with Docker Compose.
 
 ## Discord Setup
@@ -83,9 +85,14 @@ Everything commonly changed in Coolify is exposed through environment variables.
 | `STEAM_AUTO_START` | `true` | Auto-launch Steam when the XFCE desktop starts. |
 | `STEAM_START_DELAY_SECONDS` | `12` | Delay before auto-launching Steam, giving the desktop time to settle. |
 | `STEAM_ARGS` | `-silent` | Arguments passed to the Steam launcher. |
-| `AUTO_OPEN_JACKBOX_INSTALLERS` | `false` | When `true`, queue configured Jackbox install URLs automatically after startup. |
-| `AUTO_INSTALL_DELAY_SECONDS` | `90` | Delay before auto-queueing Jackbox installs. Useful after QR login is complete. |
-| `STEAM_APP_IDS` | Jackbox pack list | Steam app IDs used by the desktop installer launcher. |
+| `STEAM_LIBRARY_PATH` | `/mnt/games/SteamLibrary` | Persistent Steam library folder created in the `steam-games` volume. |
+| `STEAM_INSTALL_URL_DELAY_SECONDS` | `3` | Delay between each queued Steam install URL. |
+| `AUTO_INSTALL_JACKBOX_APPS` | `true` | Automatically queue configured Jackbox installs after startup. |
+| `AUTO_OPEN_JACKBOX_INSTALLERS` | `true` | Backward-compatible alias for the auto installer. |
+| `AUTO_INSTALL_DELAY_SECONDS` | `60` | Delay before auto-queueing Jackbox installs. Gives the desktop and QR login screen time to settle. |
+| `AUTO_INSTALL_RETRY_ATTEMPTS` | `30` | Number of startup retry passes. Useful because Steam must be signed in before it can accept paid game installs. |
+| `AUTO_INSTALL_RETRY_SECONDS` | `60` | Delay between retry passes. |
+| `STEAM_APP_IDS` | Jackbox pack list | Steam app IDs used by the auto installer and desktop launcher. |
 | `TZ`, `PUID`, `PGID` | `America/New_York`, `1000`, `1000` | LinuxServer container timezone and file ownership. |
 
 ## GPU Acceleration
@@ -106,11 +113,14 @@ docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d --build
 
 ## Installing Jackbox
 
+Steam and `steamcmd` are installed in the custom image. The paid Jackbox game files cannot be baked into the image unless a Steam account that owns them is authenticated, so the container queues installs after QR login instead.
+
 After the Steam desktop opens:
 
 1. Sign into Steam with the QR code.
-2. Open the `Install Jackbox Packs` launcher on the desktop.
-3. Confirm the install prompts for the packs your Steam account owns.
+2. Leave `AUTO_INSTALL_JACKBOX_APPS=true` and the container will retry the configured install URLs automatically.
+3. If you want to trigger it manually, open the `Install All Jackbox Games` launcher on the desktop.
+4. Steam downloads the apps your account owns, and skips or prompts for apps you do not own.
 
 The default app list is Party Pack 1-11 plus The Jackbox Party Starter:
 
@@ -127,7 +137,7 @@ The Compose file creates:
 - `steam-config` mounted at `/config`
 - `steam-games` mounted at `/mnt/games`
 
-The custom Steam Webtop stores the Steam home directory under `/config`, so normal Steam login state and installs persist. You can also add `/mnt/games/SteamLibrary` as a Steam library folder from Steam settings if you want a separate game volume.
+The custom Steam Webtop stores the Steam home directory under `/config`, so normal Steam login state persists. It also creates `/mnt/games/SteamLibrary` in the `steam-games` volume and registers it as a Steam library folder for game downloads.
 
 ## Security Notes
 

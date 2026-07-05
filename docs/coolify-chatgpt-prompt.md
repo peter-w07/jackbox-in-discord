@@ -11,7 +11,7 @@ Goal:
 - Keep the Steam container internal behind the Node app's /steam/ reverse proxy.
 - Create persistent Docker volumes for Steam config and games.
 - Configure Discord so /jackbox creates an Activity invite that opens the Steam desktop.
-- After I scan the Steam QR login code, help me queue Jackbox downloads with the desktop "Install Jackbox Packs" launcher.
+- Steam should be installed in the image, auto-start for QR login, and automatically retry install URLs for all configured Jackbox games after I scan the Steam QR code.
 
 Repository:
 https://github.com/peter-w07/jackbox-in-discord
@@ -66,8 +66,13 @@ Optional, ask whether I want to change these from defaults:
 - STEAM_AUTO_START=true
 - STEAM_START_DELAY_SECONDS=12
 - STEAM_ARGS=-silent
-- AUTO_OPEN_JACKBOX_INSTALLERS=false
-- AUTO_INSTALL_DELAY_SECONDS=90
+- STEAM_LIBRARY_PATH=/mnt/games/SteamLibrary
+- STEAM_INSTALL_URL_DELAY_SECONDS=3
+- AUTO_INSTALL_JACKBOX_APPS=true
+- AUTO_OPEN_JACKBOX_INSTALLERS=true
+- AUTO_INSTALL_DELAY_SECONDS=60
+- AUTO_INSTALL_RETRY_ATTEMPTS=30
+- AUTO_INSTALL_RETRY_SECONDS=60
 
 Use these Coolify steps:
 1. Create a new Coolify resource from the GitHub repo peter-w07/jackbox-in-discord.
@@ -76,15 +81,16 @@ Use these Coolify steps:
 4. Do not publicly expose the steam service directly. It should only be reached through the bot service at /steam/.
 5. Add persistent volumes exactly as defined by Compose: steam-config and steam-games.
 6. Add all required environment variables I provided, plus any optional overrides I chose. For optional values I did not change, either omit them or set the defaults above.
-7. Deploy and watch logs until both jackbox-discord-bot and jackbox-steam are healthy. The Steam service builds from steam/Dockerfile, based on linuxserver/webtop:ubuntu-xfce with Steam installed.
+7. Deploy and watch logs until both jackbox-discord-bot and jackbox-steam are healthy. The Steam service builds from steam/Dockerfile, based on linuxserver/webtop:ubuntu-xfce with Steam and steamcmd installed.
 8. Visit PUBLIC_ACTIVITY_URL + /healthz and confirm it returns ok.
 9. In Discord Developer Portal, set the Activity URL for this app to PUBLIC_ACTIVITY_URL. Make sure the bot is invited with bot and applications.commands scopes and Create Instant Invite permission.
 10. In Discord, join a voice channel and run /jackbox. Open the invite.
-11. In the Activity, open the Steam desktop, scan the Steam QR code with my Steam mobile app, then wait for me to confirm I am signed in.
-12. After I confirm Steam is signed in, open the desktop launcher named "Install Jackbox Packs". Confirm the install prompts for the games my Steam account owns.
+11. In the Activity, open the Steam desktop and scan the Steam QR code with my Steam mobile app.
+12. Leave the desktop open. The container should automatically retry the configured Jackbox install URLs; Steam will download the games my account owns. If needed, open the desktop launcher named "Install All Jackbox Games" to queue them manually.
 
 Important constraints:
 - Never ask me to paste my Steam password. Use the QR-code login only.
+- Do not claim paid Jackbox game files can be baked into the image without an authenticated Steam account that owns them. Use Steam QR login, then install through the Steam client.
 - Prefer ACTIVITY_PASSWORD over browser basic auth so Discord users see a normal in-app password box.
 - Do not enable browser basic auth on the Steam container; it creates a native browser prompt that may not render correctly in Discord.
 - If the VPS has Intel/AMD GPU access, redeploy with docker-compose.gpu.yml as an override. If it has Nvidia, verify the Nvidia container runtime first, then use docker-compose.nvidia.yml.

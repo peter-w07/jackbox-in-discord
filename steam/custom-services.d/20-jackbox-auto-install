@@ -1,14 +1,26 @@
 #!/usr/bin/with-contenv bash
 set -euo pipefail
 
-if [[ "${AUTO_OPEN_JACKBOX_INSTALLERS:-false}" != "true" ]]; then
+AUTO_INSTALL_ENABLED="${AUTO_INSTALL_JACKBOX_APPS:-${AUTO_OPEN_JACKBOX_INSTALLERS:-true}}"
+
+if [[ "$AUTO_INSTALL_ENABLED" != "true" ]]; then
   sleep infinity
 fi
 
-sleep "${AUTO_INSTALL_DELAY_SECONDS:-90}"
+sleep "${AUTO_INSTALL_DELAY_SECONDS:-60}"
 
-if [[ -x /config/jackbox/open-installers.sh ]]; then
-  s6-setuidgid abc /config/jackbox/open-installers.sh || true
-fi
+attempts="${AUTO_INSTALL_RETRY_ATTEMPTS:-30}"
+retry_seconds="${AUTO_INSTALL_RETRY_SECONDS:-60}"
+
+for ((attempt = 1; attempt <= attempts; attempt++)); do
+  if [[ -x /config/jackbox/open-installers.sh ]]; then
+    echo "Jackbox install queue attempt ${attempt}/${attempts}"
+    s6-setuidgid abc /config/jackbox/open-installers.sh || true
+  fi
+
+  if ((attempt < attempts)); then
+    sleep "$retry_seconds"
+  fi
+done
 
 sleep infinity

@@ -13,6 +13,8 @@ RUN \
     sed -i -E '/^deb / s/( main)( .*)?$/\1 restricted universe multiverse/' /etc/apt/sources.list; \
   fi && \
   apt-get update && \
+  echo steam steam/question select "I AGREE" | debconf-set-selections && \
+  echo steam steam/license note "" | debconf-set-selections && \
   echo "**** install Steam and desktop helpers ****" && \
   apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -22,9 +24,11 @@ RUN \
     libgl1-mesa-dri:i386 \
     libvulkan1:i386 \
     mesa-vulkan-drivers:i386 \
+    steamcmd \
     steam-installer \
     xdg-utils && \
   ln -sf /usr/games/steam /usr/local/bin/steam && \
+  ln -sf /usr/games/steamcmd /usr/local/bin/steamcmd && \
   echo "**** cleanup ****" && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
