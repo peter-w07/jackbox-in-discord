@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -22,8 +23,13 @@ const distDir = path.resolve(__dirname, '..', 'dist');
 
 const env = readEnv();
 const app = express();
+const activitySessionSecret =
+  env.activitySessionSecret || env.discordBotToken || randomBytes(32).toString('hex');
+const activityAuthCookie = 'jackbox_activity_auth';
 
 app.disable('x-powered-by');
+app.set('trust proxy', true);
+app.use(express.json({ limit: '10kb' }));
 
 const steamMount = env.steamProxyPrefix.replace(/\/$/, '');
 
@@ -40,10 +46,43 @@ app.get('/config.js', (_req, res) => {
   res.type('application/javascript').send(
     `window.JACKBOX_CONFIG = ${safeJson({
       discordApplicationId: env.discordApplicationId,
+      activityPasswordRequired: Boolean(env.activityPassword),
       steamPath: env.steamProxyPrefix,
       publicActivityUrl: env.publicActivityUrl
     })};`
   );
+});
+
+app.get('/api/activity-auth', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    required: Boolean(env.activityPassword),
+    authenticated: !env.activityPassword || isActivityAuthenticated(req)
+  });
+});
+
+app.post('/api/activity-login', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+
+  if (!env.activityPassword) {
+    res.json({ ok: true });
+    return;
+  }
+
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+  if (!secureEqual(password, env.activityPassword)) {
+    res.status(401).json({ ok: false, error: 'Incorrect password.' });
+    return;
+  }
+
+  setActivityCookie(res);
+  res.json({ ok: true });
+});
+
+app.post('/api/activity-logout', (_req, res) => {
+  clearActivityCookie(res);
+  res.json({ ok: true });
 });
 
 app.use((req, res, next) => {
@@ -72,6 +111,31 @@ app.use((req, res, next) => {
   }
 
   next();
+});
+
+app.use((req, res, next) => {
+  if (!isSteamRequestPath(req.path) || !env.activityPassword) {
+    next();
+    return;
+  }
+
+  if (isActivityAuthenticated(req)) {
+    next();
+    return;
+  }
+
+  res.status(401);
+
+  if (req.accepts('html')) {
+    res
+      .type('html')
+      .send(
+        '<!doctype html><title>Locked</title><body>Open the Activity and enter the password.</body>'
+      );
+    return;
+  }
+
+  res.json({ ok: false, error: 'Activity password required.' });
 });
 
 app.use((req, res, next) => {
@@ -131,7 +195,21 @@ app.use((req, res, next) => {
 const server = http.createServer(app);
 
 if (typeof steamProxy.upgrade === 'function') {
-  server.on('upgrade', steamProxy.upgrade);
+  server.on('upgrade', (req, socket, head) => {
+    const pathname = parseRequestPath(req.url);
+
+    if (
+      isSteamRequestPath(pathname) &&
+      env.activityPassword &&
+      !isActivityAuthenticated(req)
+    ) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+
+    steamProxy.upgrade(req, socket, head);
+  });
 }
 
 server.listen(env.port, () => {
@@ -163,6 +241,17 @@ function readEnv() {
       process.env.DISCORD_APPLICATION_ID || process.env.DISCORD_CLIENT_ID || '',
     discordGuildId: process.env.DISCORD_GUILD_ID || '',
     publicActivityUrl: trimTrailingSlash(process.env.PUBLIC_ACTIVITY_URL || ''),
+    activityPassword:
+      process.env.ACTIVITY_PASSWORD || process.env.LEGACY_STEAM_WEB_PASSWORD || '',
+    activitySessionSecret: process.env.ACTIVITY_SESSION_SECRET || '',
+    activitySessionTtlSeconds: parseInteger(
+      process.env.ACTIVITY_SESSION_TTL_SECONDS,
+      86400
+    ),
+    activityCookieSecure: parseBoolean(
+      process.env.ACTIVITY_COOKIE_SECURE,
+      process.env.NODE_ENV === 'production'
+    ),
     steamInternalUrl: trimTrailingSlash(
       process.env.STEAM_INTERNAL_URL || 'http://steam:3000'
     ),
@@ -405,6 +494,118 @@ function parseJson(value) {
 
 function safeJson(value) {
   return JSON.stringify(value).replaceAll('<', '\\u003c');
+}
+
+function isSteamRequestPath(pathname) {
+  return pathname === steamMount || pathname.startsWith(env.steamProxyPrefix);
+}
+
+function parseRequestPath(url = '/') {
+  try {
+    return new URL(url, 'http://localhost').pathname;
+  } catch {
+    return '/';
+  }
+}
+
+function isActivityAuthenticated(req) {
+  if (!env.activityPassword) {
+    return true;
+  }
+
+  const token = parseCookies(req.headers.cookie || '')[activityAuthCookie];
+  return verifyActivityToken(token);
+}
+
+function setActivityCookie(res) {
+  res.cookie(activityAuthCookie, createActivityToken(), {
+    httpOnly: true,
+    maxAge: env.activitySessionTtlSeconds * 1000,
+    sameSite: env.activityCookieSecure ? 'none' : 'lax',
+    secure: env.activityCookieSecure
+  });
+}
+
+function clearActivityCookie(res) {
+  res.clearCookie(activityAuthCookie, {
+    sameSite: env.activityCookieSecure ? 'none' : 'lax',
+    secure: env.activityCookieSecure
+  });
+}
+
+function createActivityToken() {
+  const payload = Buffer.from(
+    JSON.stringify({
+      exp: Date.now() + env.activitySessionTtlSeconds * 1000
+    })
+  ).toString('base64url');
+
+  return `${payload}.${signActivityPayload(payload)}`;
+}
+
+function verifyActivityToken(token) {
+  if (!token || !token.includes('.')) {
+    return false;
+  }
+
+  const [payload, signature] = token.split('.', 2);
+
+  if (!secureEqual(signature, signActivityPayload(payload))) {
+    return false;
+  }
+
+  try {
+    const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return Number.isFinite(decoded.exp) && decoded.exp > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function signActivityPayload(payload) {
+  return createHmac('sha256', activitySessionSecret).update(payload).digest('base64url');
+}
+
+function parseCookies(header) {
+  return header.split(';').reduce((cookies, part) => {
+    const separator = part.indexOf('=');
+
+    if (separator === -1) {
+      return cookies;
+    }
+
+    const name = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+
+    if (name) {
+      try {
+        cookies[name] = decodeURIComponent(value);
+      } catch {
+        cookies[name] = value;
+      }
+    }
+
+    return cookies;
+  }, {});
+}
+
+function secureEqual(value, expected) {
+  const valueBuffer = Buffer.from(value);
+  const expectedBuffer = Buffer.from(expected);
+
+  if (valueBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(valueBuffer, expectedBuffer);
+}
+
+function parseBoolean(value, fallback) {
+  if (value === undefined || value === '') {
+    return fallback;
+  }
+
+  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
 }
 
 function shutdown() {

@@ -23,6 +23,22 @@
         </div>
       </header>
       <main class="desktop-shell">
+        <section id="authGate" class="auth-gate" hidden>
+          <form id="authForm" class="auth-panel">
+            <label for="activityPassword">Activity Password</label>
+            <div class="password-row">
+              <input
+                id="activityPassword"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+              />
+              <button id="unlockSteam" type="submit">Unlock</button>
+            </div>
+            <p id="authMessage" role="status"></p>
+          </form>
+        </section>
         <iframe
           id="steamFrame"
           title="Steam desktop"

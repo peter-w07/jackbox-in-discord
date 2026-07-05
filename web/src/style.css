@@ -117,6 +117,7 @@ button:focus-visible,
 .desktop-shell {
   min-width: 0;
   min-height: 0;
+  position: relative;
 }
 
 iframe {
@@ -125,6 +126,67 @@ iframe {
   height: 100%;
   border: 0;
   background: #050505;
+}
+
+.auth-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background:
+    linear-gradient(90deg, rgba(239, 64, 54, 0.2), transparent 38%),
+    linear-gradient(270deg, rgba(249, 185, 44, 0.18), transparent 34%),
+    #111111;
+}
+
+.auth-panel {
+  width: min(440px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(10, 10, 10, 0.86);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.36);
+}
+
+.auth-panel label {
+  display: block;
+  margin-bottom: 10px;
+  color: #fff8df;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.password-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+input {
+  min-width: 0;
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 7px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8f5ee;
+  font: inherit;
+  font-size: 14px;
+}
+
+input:focus-visible {
+  outline: 2px solid #f9b92c;
+  outline-offset: 2px;
+}
+
+#authMessage {
+  min-height: 20px;
+  margin: 10px 0 0;
+  color: #ffe39a;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 @media (max-width: 560px) {
@@ -156,5 +218,13 @@ iframe {
     height: 32px;
     padding: 0 9px;
     font-size: 12px;
+  }
+
+  .password-row {
+    grid-template-columns: 1fr;
+  }
+
+  .password-row button {
+    width: 100%;
   }
 }

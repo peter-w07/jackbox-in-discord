@@ -22,6 +22,7 @@ Required:
 - DISCORD_BOT_TOKEN: ask me for my Discord bot token.
 - DISCORD_APPLICATION_ID: ask me for my Discord application/client ID.
 - PUBLIC_ACTIVITY_URL: ask me for the public HTTPS domain Coolify should serve, such as https://jackbox.example.com.
+- ACTIVITY_PASSWORD: ask me for the password Discord users should enter in the Activity before Steam loads. Leave blank only if I explicitly want no Activity password.
 
 Strongly recommended:
 - DISCORD_GUILD_ID: ask whether I want instant slash-command registration in one server. If not, leave blank for global commands.
@@ -59,13 +60,16 @@ Optional, ask whether I want to change these from defaults:
 - SELKIES_ENCODER=x264enc,jpeg
 - SELKIES_USE_CPU=true
 - START_DOCKER=false
+- ACTIVITY_SESSION_SECRET blank by default
+- ACTIVITY_SESSION_TTL_SECONDS=86400
+- ACTIVITY_COOKIE_SECURE=true
 - STEAM_AUTO_START=true
 - STEAM_START_DELAY_SECONDS=12
 - STEAM_ARGS=-silent
 - AUTO_OPEN_JACKBOX_INSTALLERS=false
 - AUTO_INSTALL_DELAY_SECONDS=90
-- STEAM_WEB_USER blank by default
-- STEAM_WEB_PASSWORD blank by default
+- STEAM_BASIC_AUTH_USER blank by default
+- STEAM_BASIC_AUTH_PASSWORD blank by default
 
 Use these Coolify steps:
 1. Create a new Coolify resource from the GitHub repo peter-w07/jackbox-in-discord.
@@ -83,7 +87,8 @@ Use these Coolify steps:
 
 Important constraints:
 - Never ask me to paste my Steam password. Use the QR-code login only.
-- If basic auth is enabled with STEAM_WEB_USER and STEAM_WEB_PASSWORD, warn me that Discord users will see an extra browser auth prompt.
+- Prefer ACTIVITY_PASSWORD over browser basic auth so Discord users see a normal in-app password box.
+- If basic auth is enabled with STEAM_BASIC_AUTH_USER and STEAM_BASIC_AUTH_PASSWORD, warn me that Discord users will see an extra browser auth prompt.
 - If the VPS has Intel/AMD GPU access, redeploy with docker-compose.gpu.yml as an override. If it has Nvidia, verify the Nvidia container runtime first, then use docker-compose.nvidia.yml.
 - If STEAM_PROXY_PREFIX changes, keep the leading/trailing slash and make sure the Steam service SUBFOLDER and bot STEAM_PROXY_PREFIX match.
 - If STEAM_INTERNAL_PORT changes, update STEAM_INTERNAL_URL so the bot points at the same port.
