@@ -71,6 +71,9 @@ Everything commonly changed in Coolify is exposed through environment variables.
 | `SELKIES_GAMEPAD_ENABLED` | `true` | Browser gamepad support. |
 | `SELKIES_CLIPBOARD_ENABLED` | `true` | Browser clipboard sync. |
 | `PIXELFLUX_WAYLAND` / `AUTO_GPU` | `false` / `false` | Enable through the GPU override files on compatible hosts. |
+| `DISABLE_DRI3` / `DISABLE_ZINK` | `true` / `true` | Keep older or no-GPU VPS hosts on software rendering. |
+| `MAX_RES` | `1920x1080` | Clamp the X11 virtual framebuffer for compatibility and lower memory use. |
+| `SELKIES_ENCODER` / `SELKIES_USE_CPU` | `x264enc,jpeg` / `true` | Force software encoders for hosts without AVX2. |
 | `STEAM_WEB_USER` / `STEAM_WEB_PASSWORD` | blank | Optional basic auth in front of the Steam web desktop. |
 | `STEAM_APP_IDS` | Jackbox pack list | Steam app IDs used by the desktop installer launcher. |
 | `TZ`, `PUID`, `PGID` | `America/New_York`, `1000`, `1000` | LinuxServer container timezone and file ownership. |

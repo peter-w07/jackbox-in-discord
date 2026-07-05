@@ -53,6 +53,11 @@ Optional, ask whether I want to change these from defaults:
 - SELKIES_CLIPBOARD_ENABLED=true
 - PIXELFLUX_WAYLAND=false
 - AUTO_GPU=false
+- DISABLE_DRI3=true
+- DISABLE_ZINK=true
+- MAX_RES=1920x1080
+- SELKIES_ENCODER=x264enc,jpeg
+- SELKIES_USE_CPU=true
 - START_DOCKER=false
 - STEAM_WEB_USER blank by default
 - STEAM_WEB_PASSWORD blank by default
